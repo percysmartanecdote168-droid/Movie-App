@@ -273,7 +273,7 @@ This is a **pseudo-element** — a special selector for parts of an element that
 | `styles.css` | All visual styling (colors, layout, animations) |
 | `app.js` | JavaScript that loads data and builds the homepage |
 | `movie.js` | JavaScript that loads data and builds the detail page |
-| `movies.json` | The raw movie data (titles, ratings, posters, etc.) |
+| `TMDB (in place of mockMovie.json)` | The raw movie data (titles, ratings, posters, etc.) |
 
 ---
 

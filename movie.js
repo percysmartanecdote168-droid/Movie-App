@@ -5,7 +5,7 @@
 //    movie.html?id=3
 //
 //  This file reads that "?id=3" from the URL,
-//  finds the matching movie in movies.json,
+//  finds the matching movie in TMDB,
 //  and fills in all the page content.
 // ============================================================
 
@@ -23,13 +23,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // --- STEP 2: Load the same movies.json file ---
-  fetch('movies.json')
-    .then(response => response.json())
-    .then(movies => {
-      // Find the one movie whose id matches
-      const movie = movies.find(m => m.id === movieId);
+  // --- STEP 2: Load movies from TMDB--
+  
+  const API_KEY = "5b935f7af37c1e4bce6d714677a2ba44"; // 🔑 Your TMDB API key (keep private)
+const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
+fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`)
+  .then(res => res.json())
+  .then(movie => {
+
+    if (!movie || movie.success === false) {
+      console.error("Movie not found:", movie);
+      window.location.href = "index.html";
+      return;
+    }
+
+    renderMovieDetail(movie);
+  })
+  .catch(err => {
+    console.error("Failed to load movie:", err);
+  });
       // If no movie found with that ID, go back home
       if (!movie) {
         window.location.href = 'index.html';
@@ -50,53 +63,57 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   function renderMovieDetail(movie) {
 
-    // --- Update the browser tab title ---
-    document.title = `${movie.title} (${movie.year}) — KMovies`;
+  // Title
+  document.title = `${movie.title} — KMovies`;
 
-    // --- Backdrop (the blurred background image behind the content) ---
-    const backdrop = document.getElementById('detailBackdrop');
-    backdrop.style.backgroundImage = `url('${movie.backdrop}')`;
+  // Backdrop
+  const backdrop = document.getElementById('detailBackdrop');
+  backdrop.style.backgroundImage =
+    movie.backdrop_path
+      ? `url('https://image.tmdb.org/t/p/w1280${movie.backdrop_path}')`
+      : "none";
 
-    // --- Poster image ---
-    const poster = document.getElementById('detailPoster');
-    poster.src = movie.poster;
-    poster.alt = `${movie.title} Poster`;
+  // Poster
+  const poster = document.getElementById('detailPoster');
+  poster.src = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : "";
 
-    // --- Title ---
-    document.getElementById('detailTitle').textContent = movie.title;
+  poster.alt = movie.title;
 
-    // --- Year ---
-    document.getElementById('detailYear').textContent = movie.year;
+  // Title text
+  document.getElementById('detailTitle').textContent = movie.title;
 
-    // --- Rating ---
-    document.getElementById('detailRating').textContent = movie.rating;
+  // Year (safe fallback)
+  document.getElementById('detailYear').textContent =
+    movie.release_date ? movie.release_date.split("-")[0] : "N/A";
 
-    // --- Type (Movie / Series) ---
-    document.getElementById('detailType').textContent = movie.type;
+  // Rating
+  document.getElementById('detailRating').textContent =
+    movie.vote_average ?? "N/A";
 
-    // --- Description ---
-    document.getElementById('detailDescription').textContent = movie.description;
+  // Description
+  document.getElementById('detailDescription').textContent =
+    movie.overview || "No description available.";
 
-    // --- Episodes (only shown for Series) ---
-    const episodesEl = document.getElementById('detailEpisodes');
-    if (movie.type === 'Series' && movie.episodes) {
-      episodesEl.innerHTML = `<strong>${movie.episodes} Episodes</strong>`;
-    } else {
-      episodesEl.style.display = 'none';
-    }
+  // Genres (TMDB sometimes gives objects like {id, name})
+  const genresEl = document.getElementById('detailGenres');
 
-    // --- Genre Tags ---
-    // We loop through the genres array and create a <span> for each one
-    const genresEl = document.getElementById('detailGenres');
-    genresEl.innerHTML = movie.genres.map(genre => `
-      <span class="genre-tag">${genre}</span>
-    `).join('');
-
-    // --- Update the meta description for SEO ---
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', `Watch ${movie.title} (${movie.year}) on KMovies. ${movie.description.slice(0, 120)}...`);
-    }
+  if (movie.genres && Array.isArray(movie.genres)) {
+    genresEl.innerHTML = movie.genres
+      .map(g => `<span class="genre-tag">${g.name}</span>`)
+      .join('');
+  } else {
+    genresEl.innerHTML = "";
   }
 
-}); // End of DOMContentLoaded
+  // SEO meta
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) {
+    const desc = (movie.overview || "").slice(0, 120);
+    metaDesc.setAttribute(
+      "content",
+      `Watch ${movie.title} on KMovies. ${desc}...`
+    );
+  }
+}
