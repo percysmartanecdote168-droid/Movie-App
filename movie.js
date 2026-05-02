@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- STEP 2: Load movies from TMDB--
   
-  const API_KEY = "5b935f7af37c1e4bce6d714677a2ba44"; // 🔑 Your TMDB API key (keep private)
+  const API_KEY = window.API_KEY; // 🔑 Your TMDB API key (keep private)
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${API_KEY}`)

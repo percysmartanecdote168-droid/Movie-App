@@ -36,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // We use fetch() to call The Movie Database (TMDB) servers over the internet.
   // The API returns real, up-to-date movie data in JSON format.
 
-  const API_KEY = "5b935f7af37c1e4bce6d714677a2ba44"; // 🔑 Your TMDB API key (keep private)
+  const API_KEY = window.API_KEY; // 🔑 Your TMDB API key (keep private)
   const IMAGE_BASE = "https://image.tmdb.org/t/p/w500"; // 🖼️ Base URL for images
 
 
   // STEP 2: FETCH REAL MOVIE DATA FROM TMDB
 
-
+  renderSkeletonCards(); // Show loading placeholders while we fetch data
   // fetch() = sends request to TMDB servers
   fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`)
 
@@ -68,62 +68,63 @@ document.addEventListener('DOMContentLoaded', () => {
       // Log raw API results for debugging (optional)
       console.log("TMDB RAW DATA:", data.results);
 
-
+//Guarantees skeleton is replaced AFTER fetch completes
+document.getElementById('moviesGrid').innerHTML = "";
       // CONVERT TMDB FORMAT → YOUR APP FORMAT
       // Your UI expects:
       // id, title, year, rating, description, poster, etc.
 
       const movies = data.results.map(movie => {
 
-  // ============================================================
-  // Convert TMDB genre IDs into readable genre names
-  // Example: [28, 12] → ["Action", "Adventure"]
-  // ============================================================
-  const genres = Array.isArray(movie.genre_ids)
-  ? movie.genre_ids.map(id => GENRE_MAP[id]).filter(Boolean)
-  : [];
+        // ============================================================
+        // Convert TMDB genre IDs into readable genre names
+        // Example: [28, 12] → ["Action", "Adventure"]
+        // ============================================================
+        const genres = Array.isArray(movie.genre_ids)
+          ? movie.genre_ids.map(id => GENRE_MAP[id]).filter(Boolean)
+          : [];
 
-  // ============================================================
-  // Return a clean movie object used by your entire UI
-  // ============================================================
-  return {
-    // Unique identifier used for navigation (movie.html?id=...)
-    id: movie.id,
+        // ============================================================
+        // Return a clean movie object used by your entire UI
+        // ============================================================
+        return {
+          // Unique identifier used for navigation (movie.html?id=...)
+          id: movie.id,
 
-    // Movie title (fallback included for safety)
-    title: movie.title || movie.name || "Untitled",
+          // Movie title (fallback included for safety)
+          title: movie.title || movie.name || "Untitled",
 
-    // Extract year from release date (if available)
-    year: movie.release_date
-      ? movie.release_date.split("-")[0]
-      : "N/A",
+          // Extract year from release date (if available)
+          year: movie.release_date
+            ? movie.release_date.split("-")[0]
+            : "N/A",
 
-    // TMDB rating system (0–10 scale)
-    rating: movie.vote_average || 0,
+          // TMDB rating system (0–10 scale)
+          rating: movie.vote_average || 0,
 
-    // Movie description / plot summary
-    description: movie.overview || "No description available.",
+          // Movie description / plot summary
+          description: movie.overview || "No description available.",
 
-    // Image URLs (TMDB only provides partial paths)
-    poster: movie.poster_path
-      ? IMAGE_BASE + movie.poster_path
-      : "",
+          // Image URLs (TMDB only provides partial paths)
+          poster: movie.poster_path
+            ? IMAGE_BASE + movie.poster_path
+            : "",
 
-    backdrop: movie.backdrop_path
-      ? IMAGE_BASE + movie.backdrop_path
-      : "",
+          backdrop: movie.backdrop_path
+            ? IMAGE_BASE + movie.backdrop_path
+            : "",
 
-    // 🔥 FIX: enables filtering + genre buttons
-    genres: genres,
+          // 🔥 FIX: enables filtering + genre buttons
+          genres: genres,
 
-    // UI flags used by your homepage sections
-    featured: false,
-    isTrending: true,
+          // UI flags used by your homepage sections
+          featured: false,
+          isTrending: true,
 
-    // Helps UI know how to label it
-    type: "Movie"
-  };
-});
+          // Helps UI know how to label it
+          type: "Movie"
+        };
+      });
 
       // START THE APP
 
@@ -137,14 +138,33 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("API failed:", err);
     });
 
+  // ============================================================
+  // UI HELPERS (SKELETON LOADER)
+  //  This code runs on movie.html to show the outline of a  movie before it loads.
+  // ============================================================
+  function renderSkeletonCards(count = 8) {
+    const grid = document.getElementById('moviesGrid');
+
+    grid.innerHTML = Array(count).fill().map(() => `
+    <div class="movie-card skeleton">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text small"></div>
+    </div>
+  `).join('');
+  }
+
   // --- STEP 3: Main init function — called once data is ready ---
+
   function init(movies) {
     renderHero(movies);
     renderTrending(movies);
     renderMovies(movies);
+
     setupNavScroll();
     setupSearch(movies);
   }
+
 
 
   // ============================================================
@@ -154,12 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   function renderHero(movies) {
     // Instead of picking the first movie, we find the one with the highest rating.This makes the homepage feel more "curated" like Netflix.
-const featured = movies.reduce((best, current) => {
- 
-// Compare vote_average (TMDB rating system)
-  return (current.rating > best.rating) ? current : best;
+    const featured = movies.reduce((best, current) => {
 
-}, movies[0]);
+      // Compare vote_average (TMDB rating system)
+      return (current.rating > best.rating) ? current : best;
+
+    }, movies[0]);
 
     // Get the HTML elements we want to update
     const heroBg = document.getElementById('heroBg');
@@ -168,12 +188,12 @@ const featured = movies.reduce((best, current) => {
     // Set the background image using the backdrop URL
     heroBg.style.backgroundImage = `url('${featured.backdrop}')`;
 
-    
+
 
     // Build the genre tags string (e.g., "Action · Crime · Drama")
-    const genreText = featured.genres?.length 
-  ? featured.genres.join(' · ')
-  : "Trending Movie"; // If genres are missing (TMDB case), show fallback text
+    const genreText = featured.genres?.length
+      ? featured.genres.join(' · ')
+      : "Trending Movie"; // If genres are missing (TMDB case), show fallback text
 
 
     // Inject the HTML into the hero content area
@@ -206,21 +226,21 @@ const featured = movies.reduce((best, current) => {
       trendingActiveGenre,        // currently selected genre
       function onTrendingSelect(genre) {
 
-  // Store selected genre so UI remembers it
-  trendingActiveGenre = genre;
+        // Store selected genre so UI remembers it
+        trendingActiveGenre = genre;
 
-  // Filter only trending movies + apply genre filter
-  const filtered = filterByGenre(
-    movies.filter(m => m.isTrending),
-    genre
-  );
+        // Filter only trending movies + apply genre filter
+        const filtered = filterByGenre(
+          movies.filter(m => m.isTrending),
+          genre
+        );
 
-  // Re-render trending section with filtered data
-  buildTrendingCards(filtered);
+        // Re-render trending section with filtered data
+        buildTrendingCards(filtered);
 
-  // Rebuild buttons so "active" class updates visually
-  buildGenreButtons('trendingGenres', ALL_GENRES, trendingActiveGenre, onTrendingSelect);
-}
+        // Rebuild buttons so "active" class updates visually
+        buildGenreButtons('trendingGenres', ALL_GENRES, trendingActiveGenre, onTrendingSelect);
+      }
     );
 
 
@@ -269,18 +289,18 @@ const featured = movies.reduce((best, current) => {
       moviesActiveGenre,
       function onMoviesSelect(genre) {
 
-  // Save selected genre for state tracking
-  moviesActiveGenre = genre;
+        // Save selected genre for state tracking
+        moviesActiveGenre = genre;
 
-  // Filter full movie list by selected genre
-  const filtered = filterByGenre(movies, genre);
+        // Filter full movie list by selected genre
+        const filtered = filterByGenre(movies, genre);
 
-  // Re-render movie grid with filtered results
-  buildMovieCards(filtered);
+        // Re-render movie grid with filtered results
+        buildMovieCards(filtered);
 
-  // Update buttons so active highlight changes correctly
-  buildGenreButtons('moviesGenres', ALL_GENRES, moviesActiveGenre, onMoviesSelect);
-}
+        // Update buttons so active highlight changes correctly
+        buildGenreButtons('moviesGenres', ALL_GENRES, moviesActiveGenre, onMoviesSelect);
+      }
     );
 
     // Build the initial movie cards
@@ -374,8 +394,8 @@ const featured = movies.reduce((best, current) => {
     if (genre === 'All') return movies;
     // Array.includes() checks if the genre is in the movie's genres array
     return movies.filter(m =>
-  m.genres && m.genres.includes(genre)
-);
+      m.genres && m.genres.includes(genre)
+    );
   }
 
 
@@ -401,32 +421,37 @@ const featured = movies.reduce((best, current) => {
 
     if (!searchInput) return; // safety check
 
+    let searchTimeout;
+
     searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase();
 
-// This code searches across:
-// 1. Title
-// 2. Description (overview)
-// 3. Genres
-     const filtered = movies.filter(m => {
+      // Clear previous timer so we don’t run search on every keystroke
+      clearTimeout(searchTimeout);
 
-  // Convert everything to lowercase for case-insensitive matching
-  const title = (m.title || "").toLowerCase();
-  const description = (m.description || "").toLowerCase();
+      // Wait for user to stop typing (300ms)
+      searchTimeout = setTimeout(() => {
 
-  // Join genres array into one string for searching
-  const genres = (m.genres || []).join(" ").toLowerCase();
+        const query = searchInput.value.toLowerCase();
 
-  // Check if query exists in ANY field
-  return (
-    title.includes(query) ||
-    description.includes(query) ||
-    genres.includes(query)
-  );
-});
+        const filtered = movies.filter(m => {
 
-      buildMovieCards(filtered);
+          // Normalize data safely for searching
+          const title = (m.title || "").toLowerCase();
+          const description = (m.description || "").toLowerCase();
+          const genres = (m.genres || []).join(" ").toLowerCase();
+
+          // Match across multiple fields
+          return (
+            title.includes(query) ||
+            description.includes(query) ||
+            genres.includes(query)
+          );
+        });
+
+        // Update UI with results
+        buildMovieCards(filtered);
+
+      }, 300); // delay improves performance & UX
     });
   }
-
 }); // End of DOMContentLoaded
