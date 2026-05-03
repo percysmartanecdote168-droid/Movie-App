@@ -198,22 +198,29 @@ document.getElementById('moviesGrid').innerHTML = "";
 
     // Inject the HTML into the hero content area
     heroContent.innerHTML = `
-      <div class="hero-meta">
-        <span class="badge">${featured.type === 'Series' ? 'SERIES' : 'MOVIE'}</span>
-        <span class="hero-rating">★ ${featured.rating}</span>
-        <span>${featured.year}</span>
-        <span>${genreText}</span>
-      </div>
-      <h1 class="hero-title">${featured.title}</h1>
-      <p class="hero-description">${featured.description}</p>
-      <div class="hero-buttons">
-        <a href="movie.html?id=${featured.id}" class="btn-watch">▶ Watch</a>
-        <button class="btn-add" onclick="alert('Added to your list!')">＋ Add List</button>
-      </div>
-    `;
+  <div class="hero-meta">
+    <span class="badge">${featured.type === 'Series' ? 'SERIES' : 'MOVIE'}</span>
+    <span class="hero-rating">★ ${featured.rating}</span>
+    <span>${featured.year}</span>
+    <span>${genreText}</span>
+  </div>
+
+  <h1 class="hero-title">${featured.title}</h1>
+  <p class="hero-description">${featured.description}</p>
+
+  <div class="hero-buttons">
+    <a href="movie.html?id=${featured.id}" class="btn-watch">▶ Watch</a>
+
+    <!-- IMPORTANT: no external listener -->
+    <button class="btn-add" id="heroAddBtn">＋ Add to List</button>
+  </div>
+`;
+
+const heroBtn = document.getElementById('heroAddBtn');
+if (heroBtn) {
+  heroBtn.addEventListener('click', () => addToWatchlist(featured));
+}
   }
-
-
   // ============================================================
   //  TRENDING ROW
   //  Renders the horizontally scrollable cards in "Trends Now"
@@ -337,34 +344,55 @@ document.getElementById('moviesGrid').innerHTML = "";
 
   // Builds the grid of movie cards
   function buildMovieCards(movies) {
-    const grid = document.getElementById('moviesGrid');
+  const grid = document.getElementById('moviesGrid');
 
-    if (movies.length === 0) {
-      grid.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px 0; grid-column: 1/-1;">No titles found for this genre.</p>';
-      return;
-    }
-
-    grid.innerHTML = movies.map(movie => `
-      <article class="movie-card" onclick="window.location.href='movie.html?id=${movie.id}'" role="button" tabindex="0" aria-label="View ${movie.title}">
-        <div class="movie-card-img-wrap">
-          <span class="movie-type-badge">${movie.type}</span>
-          <img src="${movie.poster}" alt="${movie.title}" loading="lazy" />
-          <div class="movie-card-overlay">
-            <div class="play-icon">▶</div>
-          </div>
-        </div>
-        <div class="movie-card-body">
-          <div class="movie-card-title">${movie.title}</div>
-          <div class="movie-card-meta">
-            <span>${movie.year}</span>
-            <span class="movie-card-rating">★ ${movie.rating}</span>
-          </div>
-        </div>
-      </article>
-    `).join('');
+  if (movies.length === 0) {
+    grid.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px; grid-column: 1/-1;">No titles found.</p>`;
+    return;
   }
 
+  grid.innerHTML = movies.map(movie => `
+    <article class="movie-card" data-id="${movie.id}">
+      
+      <div class="movie-card-img-wrap">
+        <span class="movie-type-badge">${movie.type}</span>
+        <img src="${movie.poster}" alt="${movie.title}" loading="lazy" />
+      </div>
 
+      <div class="movie-card-body">
+        <div class="movie-card-title">${movie.title}</div>
+        <div class="movie-card-meta">
+          <span>${movie.year}</span>
+          <span>★ ${movie.rating}</span>
+        </div>
+      </div>
+
+      <!-- BIGGER + BUTTON -->
+      <button class="add-btn" data-id="${movie.id}">＋</button>
+
+    </article>
+  `).join('');
+
+  // ✅ Attach listeners AFTER DOM render
+  grid.querySelectorAll('.add-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      const id = Number(btn.dataset.id);
+      const movie = movies.find(m => m.id === id);
+
+      if (movie) addToWatchlist(movie);
+    });
+  });
+
+  // Optional: clicking card opens movie page
+  grid.querySelectorAll('.movie-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.id;
+      window.location.href = `movie.html?id=${id}`;
+    });
+  });
+}
   // ============================================================
   //  GENRE FILTER BUTTONS (Reusable)
   //  Builds a row of genre buttons inside a container element.
@@ -454,4 +482,39 @@ document.getElementById('moviesGrid').innerHTML = "";
       }, 300); // delay improves performance & UX
     });
   }
-}); // End of DOMContentLoaded
+
+  // ============================================================
+//  WATCHLIST SYSTEM (LocalStorage)
+// ============================================================
+
+// Get watchlist from storage
+function getWatchlist() {
+  return JSON.parse(localStorage.getItem('watchlist')) || [];
+}
+
+// Save watchlist
+function saveWatchlist(list) {
+  localStorage.setItem('watchlist', JSON.stringify(list));
+}
+
+// Add movie to watchlist
+window.addToWatchlist = function(movie)  {
+  const list = getWatchlist();
+
+  // Prevent duplicates
+  const exists = list.some(m => Number(m.id) === Number(movie.id));
+  if (exists) {
+    alert("Already in your list!");
+    return;
+  }
+
+  list.push(movie);
+  saveWatchlist(list);
+
+  alert("Added to your list!");
+}
+
+
+
+
+}); // End of DOMContentLoaded  

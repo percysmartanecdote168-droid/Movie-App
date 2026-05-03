@@ -1001,3 +1001,97 @@ footer {
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
+
+/* Watchlist remove button (top corner) */
+.watchlist-card {
+  position: relative;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  border: none;
+  color: white;
+  font-size: 14px;
+  padding: 6px 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.remove-btn:hover {
+  background: red;
+  transform: scale(1.1);
+}
+
+/*My Watchlist Header*/
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #0f0f0f;
+  border-bottom: 1px solid #222;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Logo */
+.header h1 {
+  font-size: 1.5rem;
+  color: white;
+}
+
+/* NAV */
+.header nav ul {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+}
+
+.header nav a {
+  text-decoration: none;
+  color: #aaa;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+/* Hover */
+.header nav a:hover {
+  color: white;
+}
+
+/* Active page */
+.header nav a.active {
+  color: white;
+  border-bottom: 2px solid red;
+  padding-bottom: 4px;
+}
+
+/*Watchlist add buttin*/
+.add-btn {
+  position: absolute;
+  top: 12px;
+  left:10px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  font-size: 26px;
+  font-weight: bold;
+  background: #ff3b3b;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.add-btn:hover {
+  transform: scale(1.15);
+}
