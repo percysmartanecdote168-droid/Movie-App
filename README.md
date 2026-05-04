@@ -36,6 +36,13 @@ Built using vanilla JavaScript, this project focuses on performance, clean UI, a
 - 🖼️ **Lazy Loading Images**
   - Improves performance and reduces bandwidth usage
 
+- 📌 **Watchlist System**
+  - Add movies to a personal watchlist using “+ Add to List”
+  - Stored locally using browser localStorage
+  - Prevents duplicate entries
+  - Dedicated My List page (watchlist.html)
+  - Instantly add/remove movies without page reload
+  - Works across homepage, movie detail page, and trending sections
 ---
 
 ## 🛠️ Tech Stack
@@ -56,6 +63,8 @@ project-folder/
 ├── movie.html # Movie detail page
 ├── app.js # Main app logic (homepage)
 ├── movie.js # Movie detail logic
+├── watchlist.js # Watchlist logic + storage
+├── watchlist.html # Watchlist page
 ├── styles.css # Styling
 ├── config.js # API key (ignored)
 └── README.md
